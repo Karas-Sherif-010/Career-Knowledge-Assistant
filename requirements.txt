@@ -1,4 +1,4 @@
-gradio
+gradio==6.28.0
 python-dotenv
 pandas
 langchain
@@ -9,3 +9,4 @@ langchain-groq
 sentence-transformers
 faiss-cpu
 pypdf
+spaces
