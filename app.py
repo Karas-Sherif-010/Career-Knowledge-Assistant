@@ -1,8 +1,24 @@
+```python
 import os
 import pandas as pd
 import gradio as gr
 
 from dotenv import load_dotenv
+
+# ============================================================
+# ZeroGPU support for Hugging Face Spaces
+# ============================================================
+
+try:
+    import spaces
+
+    @spaces.GPU(duration=1)
+    def zerogpu_startup_probe():
+        return None
+
+except ImportError:
+    spaces = None
+
 
 from langchain_groq import ChatGroq
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -14,7 +30,6 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 
 
 # ============================================================
@@ -28,7 +43,7 @@ groq_api_key = os.getenv("GROQ_API_KEY")
 if not groq_api_key:
     raise ValueError(
         "GROQ_API_KEY was not found. "
-        "Please add it to your .env file."
+        "Please add it to Hugging Face Space Secrets."
     )
 
 
@@ -128,6 +143,7 @@ print(
 jobs_path = "data/jobs.csv"
 
 if not os.path.exists(jobs_path):
+
     raise FileNotFoundError(
         f"File not found: {jobs_path}"
     )
@@ -156,6 +172,7 @@ for i, row in df.iterrows():
     )
 
     job_chunks.append(
+
         Document(
             page_content=text,
             metadata={
@@ -194,6 +211,7 @@ retriever = general_vectorstore.as_retriever(
 # ============================================================
 
 # CV Guide
+
 cv_guide_docs = [
     doc
     for doc in static_chunks
@@ -207,6 +225,7 @@ cv_guide_vectorstore = FAISS.from_documents(
 
 
 # Interview Guide
+
 interview_docs = [
     doc
     for doc in static_chunks
@@ -220,6 +239,7 @@ interview_vectorstore = FAISS.from_documents(
 
 
 # Jobs
+
 jobs_vectorstore = FAISS.from_documents(
     job_chunks,
     embeddings
@@ -385,7 +405,6 @@ def retrieve_documents(
 
     cv_chunks = load_cv(cv_file)
 
-    cv_vectorstore = None
     cv_retriever = None
 
     if cv_chunks:
@@ -606,18 +625,6 @@ def format_history(
         return "No previous conversation."
 
 
-    # Gradio 6 stores messages like:
-    #
-    # {
-    #     "role": "user",
-    #     "content": "..."
-    # }
-    #
-    # {
-    #     "role": "assistant",
-    #     "content": "..."
-    # }
-
     recent = history[
         -(max_turns * 2):
     ]
@@ -667,13 +674,11 @@ def chat(
     history
 ):
 
-    # Make sure history exists
     if history is None:
 
         history = []
 
 
-    # Empty question
     if not question or not question.strip():
 
         return history, ""
@@ -739,7 +744,7 @@ def chat(
 
 
     # --------------------------------------------------------
-    # Add message to Gradio history
+    # Add messages to Gradio history
     # --------------------------------------------------------
 
     history.append(
@@ -785,7 +790,6 @@ def clear_chat():
 with gr.Blocks(
     title="Career Knowledge Assistant"
 ) as demo:
-
 
     gr.Markdown(
         """
@@ -939,3 +943,4 @@ if __name__ == "__main__":
     )
 
     demo.launch()
+```
